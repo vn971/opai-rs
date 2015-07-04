@@ -729,13 +729,10 @@ impl Field {
     if input_points_count > 1 {
       let mut chains_count = 0u8;
       for (chain_pos, captured_pos) in input_points {
-        match self.build_chain(pos, player, chain_pos) {
-          Some(chain) => {
-            self.capture(&chain, captured_pos, player);
-            chains_count += 1;
-            if chains_count == input_points_count - 1 { break }
-          },
-          None => { }
+        if let Some(chain) = self.build_chain(pos, player, chain_pos) {
+          self.capture(&chain, captured_pos, player);
+          chains_count += 1;
+          if chains_count == input_points_count - 1 { break }
         }
       }
       chains_count > 0
