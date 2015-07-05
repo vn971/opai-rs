@@ -181,12 +181,18 @@ impl UctNode {
     self.wins.store(0, Ordering::Relaxed);
     self.draws.store(0, Ordering::Relaxed);
     self.visits.store(usize::max_value(), Ordering::Relaxed);
+    self.amaf_wins.store(0, Ordering::Relaxed);
+    self.amaf_draws.store(0, Ordering::Relaxed);
+    self.amaf_visits.store(0, Ordering::Relaxed);
   }
 
   pub fn clear_stats(&self) {
     self.wins.store(0, Ordering::Relaxed);
     self.draws.store(0, Ordering::Relaxed);
     self.visits.store(0, Ordering::Relaxed);
+    self.amaf_wins.store(0, Ordering::Relaxed);
+    self.amaf_draws.store(0, Ordering::Relaxed);
+    self.amaf_visits.store(0, Ordering::Relaxed);
   }
 }
 
