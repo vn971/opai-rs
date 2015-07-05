@@ -1,7 +1,7 @@
 use std::{ptr, thread, mem, iter};
 use std::sync::atomic::{AtomicBool, AtomicIsize, AtomicUsize, AtomicPtr, Ordering};
 use rand::{Rng, XorShiftRng};
-use types::{Pos, Coord, CoordProd, Time, Depth, Score};
+use types::{Pos, Coord, Time, Depth, Score};
 use config;
 use config::{UcbType, UctKomiType};
 use player::Player;
@@ -149,6 +149,20 @@ impl UctNode {
 
   pub fn add_loose(&self) {
     self.visits.fetch_add(1, Ordering::Relaxed);
+  }
+
+  pub fn add_amaf_win(&self) {
+    self.amaf_visits.fetch_add(1, Ordering::Relaxed);
+    self.amaf_wins.fetch_add(1, Ordering::Relaxed);
+  }
+
+  pub fn add_amaf_draw(&self) {
+    self.amaf_visits.fetch_add(1, Ordering::Relaxed);
+    self.amaf_draws.fetch_add(1, Ordering::Relaxed);
+  }
+
+  pub fn add_amaf_loose(&self) {
+    self.amaf_visits.fetch_add(1, Ordering::Relaxed);
   }
 
   pub fn loose_node(&self) {
@@ -450,6 +464,26 @@ impl UctRoot {
     }
   }
 
+  fn update_amaf_values(node: Option<&UctNode>, field: &Field, player: Player, random_result: Option<Player>) {
+    fn for_all_amaf_nodes<F: Fn(&UctNode)>(mut next: Option<&UctNode>, field: &Field, player: Player, f: F) {
+      while let Some(node) = next {
+        if node.get_visits() != usize::max_value() && field.is_players_point(node.get_pos(), player) {
+          f(node);
+        }
+        next = node.get_sibling_ref();
+      }
+    }
+    if let Some(player_random_result) = random_result {
+      if player_random_result == player {
+        for_all_amaf_nodes(node, field, player, |node| node.add_amaf_win());
+      } else {
+        for_all_amaf_nodes(node, field, player, |node| node.add_amaf_loose());
+      }
+    } else {
+      for_all_amaf_nodes(node, field, player, |node| node.add_amaf_draw());
+    }
+  }
+
   fn play_simulation_rec<T: Rng>(field: &mut Field, player: Player, node: &UctNode, possible_moves: &mut Vec<Pos>, rng: &mut T, komi: Score, depth: Depth) -> Option<Player> {
     let random_result = if node.get_visits() < config::uct_when_create_children() || depth == config::uct_depth() {
       UctRoot::play_random_game(field, player, rng, possible_moves, komi)
@@ -479,6 +513,7 @@ impl UctRoot {
     } else {
       node.add_draw();
     }
+    UctRoot::update_amaf_values(node.get_child_ref(), field, player, random_result);
     random_result
   }
 
