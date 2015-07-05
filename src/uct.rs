@@ -482,10 +482,10 @@ impl UctRoot {
     }
   }
 
-  fn update_amaf_values(node: Option<&UctNode>, field: &Field, player: Player, random_result: Option<Player>) {
-    fn for_all_amaf_nodes<F: Fn(&UctNode)>(mut next: Option<&UctNode>, field: &Field, player: Player, f: F) {
+  fn update_amaf_values(node: Option<&UctNode>, field: &Field, player: Player, cur_pos: Pos, random_result: Option<Player>) {
+    fn for_all_amaf_nodes<F: Fn(&UctNode)>(mut next: Option<&UctNode>, field: &Field, player: Player, cur_pos: Pos, f: F) {
       while let Some(node) = next {
-        if node.get_visits() != usize::max_value() && field.is_players_point(node.get_pos(), player) {
+        if node.get_pos() != cur_pos && node.get_visits() != usize::max_value() && field.is_players_point(node.get_pos(), player) {
           f(node);
         }
         next = node.get_sibling_ref();
@@ -493,12 +493,12 @@ impl UctRoot {
     }
     if let Some(player_random_result) = random_result {
       if player_random_result == player {
-        for_all_amaf_nodes(node, field, player, |node| node.add_amaf_win());
+        for_all_amaf_nodes(node, field, player, cur_pos, |node| node.add_amaf_win());
       } else {
-        for_all_amaf_nodes(node, field, player, |node| node.add_amaf_loose());
+        for_all_amaf_nodes(node, field, player, cur_pos, |node| node.add_amaf_loose());
       }
     } else {
-      for_all_amaf_nodes(node, field, player, |node| node.add_amaf_draw());
+      for_all_amaf_nodes(node, field, player, cur_pos, |node| node.add_amaf_draw());
     }
   }
 
@@ -517,7 +517,9 @@ impl UctRoot {
           next.loose_node();
           return UctRoot::play_simulation_rec(field, player, node, possible_moves, rng, komi, depth);
         }
-        UctRoot::play_simulation_rec(field, player.next(), next, possible_moves, rng, -komi, depth + 1)
+        let result = UctRoot::play_simulation_rec(field, player.next(), next, possible_moves, rng, -komi, depth + 1);
+        UctRoot::update_amaf_values(node.get_child_ref(), field, player, pos, result);
+        result
       } else {
         UctRoot::random_result(field, player, komi)
       }
@@ -531,7 +533,6 @@ impl UctRoot {
     } else {
       node.add_draw();
     }
-    UctRoot::update_amaf_values(node.get_child_ref(), field, player, random_result);
     random_result
   }
 
