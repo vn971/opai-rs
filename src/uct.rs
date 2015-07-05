@@ -137,6 +137,18 @@ impl UctNode {
     self.draws.load(Ordering::Relaxed)
   }
 
+  pub fn get_amaf_visits(&self) -> usize {
+    self.amaf_visits.load(Ordering::Relaxed)
+  }
+
+  pub fn get_amaf_wins(&self) -> usize {
+    self.amaf_wins.load(Ordering::Relaxed)
+  }
+
+  pub fn get_amaf_draws(&self) -> usize {
+    self.amaf_draws.load(Ordering::Relaxed)
+  }
+
   pub fn add_win(&self) {
     self.visits.fetch_add(1, Ordering::Relaxed);
     self.wins.fetch_add(1, Ordering::Relaxed);
@@ -588,7 +600,7 @@ impl UctRoot {
       while let Some(next_node) = next {
         let uct_value = UctRoot::ucb(root, next_node);
         let pos = next_node.get_pos();
-        info!(target: UCT_STR, "Uct for move ({0}, {1}) is {2}, {3} wins, {4} draws, {5} visits.", field.to_x(pos), field.to_y(pos), uct_value, next_node.get_wins(), next_node.get_draws(), next_node.get_visits());
+        info!(target: UCT_STR, "Uct for move ({0}, {1}) is {2}, {3} wins, {4} draws, {5} visits, {6} amaf wins, {7} amaf draws, {8} amaf visits.", field.to_x(pos), field.to_y(pos), uct_value, next_node.get_wins(), next_node.get_draws(), next_node.get_visits(), next_node.get_amaf_wins(), next_node.get_amaf_draws(), next_node.get_amaf_visits());
         if uct_value > best_uct || uct_value == best_uct && rng.gen() {
           best_uct = uct_value;
           result = Some(pos);
