@@ -15,6 +15,9 @@ struct UctNode {
   wins: AtomicUsize,
   draws: AtomicUsize,
   visits: AtomicUsize,
+  amaf_wins: AtomicUsize,
+  amaf_draws: AtomicUsize,
+  amaf_visits: AtomicUsize,
   pos: Pos,
   child: AtomicPtr<UctNode>,
   sibling: Option<Box<UctNode>>
@@ -32,6 +35,9 @@ impl UctNode {
       wins: AtomicUsize::new(0),
       draws: AtomicUsize::new(0),
       visits: AtomicUsize::new(0),
+      amaf_wins: AtomicUsize::new(0),
+      amaf_draws: AtomicUsize::new(0),
+      amaf_visits: AtomicUsize::new(0),
       pos: pos,
       child: AtomicPtr::new(ptr::null_mut()),
       sibling: None
