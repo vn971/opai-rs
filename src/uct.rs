@@ -410,10 +410,14 @@ impl UctRoot {
     let wins = node.get_wins() as f32;
     let draws = node.get_draws() as f32;
     let visits = node.get_visits() as f32;
+    let amaf_wins = node.get_amaf_wins() as f32;
+    let amaf_draws = node.get_amaf_draws() as f32;
+    let amaf_visits = node.get_amaf_visits() as f32;
     let parent_visits = parent.get_visits() as f32;
     let uct_draw_weight = config::uct_draw_weight();
     let uctk = config::uctk();
-    let win_rate = (wins + draws * uct_draw_weight) / visits;
+    let beta = UctRoot::beta(node);
+    let win_rate = (wins + draws * uct_draw_weight) / visits * (1f32 - beta) + (amaf_wins + amaf_draws * uct_draw_weight) / amaf_visits * beta;
     let uct = match config::ucb_type() {
       UcbType::Ucb1 => uctk * f32::sqrt(2.0 * f32::ln(parent_visits) / visits),
       UcbType::Ucb1Tuned => {
