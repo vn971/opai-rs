@@ -73,6 +73,8 @@ static UCT_KOMI_MIN_ITERATIONS: usize = 1000;
 
 static TIME_GAP: Time = 100;
 
+static RAVE_BIAS: f32 = 0.01;
+
 pub fn init() {
   unsafe {
     THREADS_COUNT = num_cpus::get();
@@ -137,4 +139,9 @@ pub fn uct_komi_min_iterations() -> usize {
 #[inline]
 pub fn time_gap() -> Time {
   TIME_GAP
+}
+
+#[inline]
+pub fn rave_bias() -> f32 {
+  RAVE_BIAS
 }

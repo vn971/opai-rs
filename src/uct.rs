@@ -400,6 +400,12 @@ impl UctRoot {
     UctRoot::random_result(field, player, komi)
   }
 
+  fn beta(node: &UctNode) -> f32 {
+    let visits = node.get_visits() as f32;
+    let amaf_visits = node.get_amaf_visits() as f32;
+    amaf_visits / (amaf_visits + visits + visits * amaf_visits * config::rave_bias())
+  }
+
   fn ucb(parent: &UctNode, node: &UctNode) -> f32 {
     let wins = node.get_wins() as f32;
     let draws = node.get_draws() as f32;
