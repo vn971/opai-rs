@@ -77,6 +77,10 @@ static UCT_KOMI_MIN_ITERATIONS: usize = 1000;
 
 static TIME_GAP: Time = 100;
 
+static RAVE: bool = true;
+
+static FINAL_RAVE: bool = false;
+
 static RAVE_BIAS: f32 = 0.01;
 
 pub fn init() {
@@ -148,6 +152,16 @@ pub fn uct_komi_min_iterations() -> usize {
 #[inline]
 pub fn time_gap() -> Time {
   TIME_GAP
+}
+
+#[inline]
+pub fn rave() -> bool {
+  RAVE
+}
+
+#[inline]
+pub fn final_rave() -> bool {
+  FINAL_RAVE
 }
 
 #[inline]
