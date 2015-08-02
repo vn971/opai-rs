@@ -406,7 +406,7 @@ impl UctRoot {
     amaf_visits / (amaf_visits + visits + visits * amaf_visits * config::rave_bias())
   }
 
-  fn ucb(parent: &UctNode, node: &UctNode) -> f32 {
+  fn ucb(parent: &UctNode, node: &UctNode, ucb_type: UcbType) -> f32 {
     let wins = node.get_wins() as f32;
     let draws = node.get_draws() as f32;
     let visits = node.get_visits() as f32;
@@ -418,7 +418,8 @@ impl UctRoot {
     let uctk = config::uctk();
     let beta = UctRoot::beta(node);
     let win_rate = (wins + draws * uct_draw_weight) / visits * (1f32 - beta) + (amaf_wins + amaf_draws * uct_draw_weight) / amaf_visits * beta;
-    let uct = match config::ucb_type() {
+    let uct = match ucb_type {
+      UcbType::Winrate => 0f32,
       UcbType::Ucb1 => uctk * f32::sqrt(2.0 * f32::ln(parent_visits) / visits),
       UcbType::Ucb1Tuned => {
         let v = (wins + draws * uct_draw_weight * uct_draw_weight) / visits - win_rate * win_rate + f32::sqrt(2.0 * f32::ln(parent_visits) / visits);
@@ -459,7 +460,7 @@ impl UctRoot {
       } else if visits == 0 {
         return Some(next_node);
       }
-      let uct_value = UctRoot::ucb(node, next_node);
+      let uct_value = UctRoot::ucb(node, next_node, config::ucb_type());
       if uct_value > best_uct {
         best_uct = uct_value;
         result = Some(next_node);
@@ -615,7 +616,7 @@ impl UctRoot {
     if let Some(ref root) = self.node {
       let mut next = root.get_child_ref();
       while let Some(next_node) = next {
-        let uct_value = UctRoot::ucb(root, next_node);
+        let uct_value = UctRoot::ucb(root, next_node, config::final_ucb_type());
         let pos = next_node.get_pos();
         info!(target: UCT_STR, "Uct for move ({0}, {1}) is {2}, {3} wins, {4} draws, {5} visits, {6} amaf wins, {7} amaf draws, {8} amaf visits.", field.to_x(pos), field.to_y(pos), uct_value, next_node.get_wins(), next_node.get_draws(), next_node.get_visits(), next_node.get_amaf_wins(), next_node.get_amaf_draws(), next_node.get_amaf_visits());
         if uct_value > best_uct || uct_value == best_uct && rng.gen() {
