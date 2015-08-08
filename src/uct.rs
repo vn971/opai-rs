@@ -8,7 +8,7 @@ use player::Player;
 use field;
 use field::Field;
 
-static UCT_STR: &'static str = "uct";
+const UCT_STR: &'static str = "uct";
 
 #[unsafe_no_drop_flag]
 struct UctNode {
