@@ -67,13 +67,18 @@ impl TrajectoriesPruning {
 
   fn build_trajectories_rec(field: &mut Field, trajectories: &mut Vec<Trajectory>, player: Player, cur_depth: u32, depth: u32) {
     for pos in field.min_pos() .. field.max_pos() + 1 {
-      if field.is_putting_allowed(pos) && field.has_near_points(pos, player) && !field.is_players_empty_base(pos, player) { //TODO: optimize with dsu.
+      if field.is_putting_allowed(pos) && !field.is_players_empty_base(pos, player) && if cur_depth > 1 {
+        let last_move = field.last_move().unwrap();
+        let dsu = field.find_dsu_set(last_move);
+        field.has_near_dsu_group(pos, player, dsu)
+      } else {
+        field.has_near_points(pos, player)
+      } {
         if field.is_players_empty_base(pos, player.next()) {
           field.put_point(pos, player);
           if field.get_delta_score(player) > 0 {
             TrajectoriesPruning::add_trajectory(field, trajectories, field.points_seq().index(field.moves_count() - cur_depth as usize .. field.moves_count()), player);
           }
-          field.undo();
         } else {
           field.put_point(pos, player);
           if field.get_delta_score(player) > 0 {
@@ -81,8 +86,8 @@ impl TrajectoriesPruning {
           } else if depth > 0 {
             TrajectoriesPruning::build_trajectories_rec(field, trajectories, player, cur_depth + 1, depth - 1);
           }
-          field.undo();
         }
+        field.undo();
       }
     }
   }

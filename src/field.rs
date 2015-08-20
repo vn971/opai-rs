@@ -745,7 +745,7 @@ impl Field {
     }
   }
 
-  fn find_dsu_set(&mut self, pos: Pos) -> Pos {
+  pub fn find_dsu_set(&mut self, pos: Pos) -> Pos {
     let dsu_value = self.dsu[pos];
     if dsu_value == pos {
       pos
@@ -777,6 +777,39 @@ impl Field {
       }
     }
     parent
+  }
+
+  pub fn has_near_dsu_group(&mut self, center_pos: Pos, player: Player, dsu: Pos) -> bool {
+    let n = n(self.width, center_pos);
+    let s = s(self.width, center_pos);
+    let w = w(center_pos);
+    let e = e(center_pos);
+    let nw = nw(self.width, center_pos);
+    let ne = ne(self.width, center_pos);
+    let sw = sw(self.width, center_pos);
+    let se = se(self.width, center_pos);
+    if self.is_live_players_point(n, player) {
+      self.find_dsu_set(n) == dsu || if self.is_live_players_point(s, player) {
+        self.find_dsu_set(s) == dsu
+      } else {
+        self.is_live_players_point(sw, player) && self.find_dsu_set(sw) == dsu || self.is_live_players_point(se, player) && self.find_dsu_set(se) == dsu
+      }
+    } else if self.is_live_players_point(s, player) {
+      self.find_dsu_set(s) == dsu || self.is_live_players_point(ne, player) && self.find_dsu_set(ne) == dsu || self.is_live_players_point(nw, player) && self.find_dsu_set(nw) == dsu
+    } else if self.is_live_players_point(w, player) {
+      self.find_dsu_set(w) == dsu || if self.is_live_players_point(e, player) {
+        self.find_dsu_set(e) == dsu
+      } else {
+        self.is_live_players_point(ne, player) && self.find_dsu_set(ne) == dsu || self.is_live_players_point(se, player) && self.find_dsu_set(se) == dsu
+      }
+    } else if self.is_live_players_point(e, player) {
+      self.find_dsu_set(e) == dsu || self.is_live_players_point(nw, player) && self.find_dsu_set(nw) == dsu || self.is_live_players_point(sw, player) && self.find_dsu_set(sw) == dsu
+    } else {
+      self.is_live_players_point(nw, player) && self.find_dsu_set(nw) == dsu ||
+      self.is_live_players_point(ne, player) && self.find_dsu_set(ne) == dsu ||
+      self.is_live_players_point(se, player) && self.find_dsu_set(se) == dsu ||
+      self.is_live_players_point(sw, player) && self.find_dsu_set(sw) == dsu
+    }
   }
 
   fn find_captures(&mut self, pos: Pos, player: Player) -> bool {
@@ -955,6 +988,11 @@ impl Field {
   #[inline]
   pub fn last_player(&self) -> Option<Player> {
     self.points_seq.last().map(|&pos| self.get_player(pos))
+  }
+
+  #[inline]
+  pub fn last_move(&self) -> Option<Pos> {
+    self.points_seq.last().map(|&pos| pos)
   }
 
   #[inline]
